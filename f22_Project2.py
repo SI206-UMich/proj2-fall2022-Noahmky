@@ -1,5 +1,7 @@
 from xml.sax import parseString
 from bs4 import BeautifulSoup
+
+
 import re
 import os
 import csv
@@ -25,7 +27,30 @@ def get_listings_from_search_results(html_file):
         ('Loft in Mission District', 210, '1944564'),  # example
     ]
     """
-    pass
+    with open(html_file) as fp:
+        soup = bes(fp, "html.parser")
+
+    
+    titles = []
+    title_divs = soup.find_all("div", class_="t1jojoys dir dir-ltr") 
+    for title_tag in title_divs:
+        title = title_tag.get_text()
+        id = title_tag.attrs["id"].split('_')[1]
+        titles.append((title,0,id))
+
+    costs = []
+    cost_tags = soup.find_all("span", class_="_tyxjp1")
+    for cost_tag in cost_tags:
+        cost = cost_tag.get_text()
+        cost = int(cost.split('$')[1])
+        costs.append(cost)
+    
+    results = []
+    for i, title in enumerate(titles):
+        tup = (title[0], costs[i], title[2])
+        results.append(tup)
+    
+    return results
 
 
 def get_listing_information(listing_id):
@@ -52,7 +77,55 @@ def get_listing_information(listing_id):
         number of bedrooms
     )
     """
-    pass
+    policy_number = ""
+    place_type = ""
+    bedrooms = 0
+    
+    # policy
+    
+    file = '/html_files/listing_' + listing_id + '.html'
+    with open(file, 'r', encoding = 'utf8') as fp:
+        soup = bes(fp, "html.parser")
+
+    policy_list_items = soup.find_all("li", class_="f19phm7j dir dir-ltr")
+
+    for item in policy_list_items:
+        if item.contents[0].text == "Policy number: ":
+            policy_number = item.contents[1].text         
+            if 'pending' in policy_number.lower():
+                policy_number = 'Pending'
+            elif not bool(re.search(r'[0-9]', policy_number.lower())):
+                policy_number = "Exempt"                                
+            
+    # place
+    
+    sub_titles = soup.find_all("h2", class_="_14i3z6h")
+
+    sub = sub_titles[0].text 
+    if 'private' in sub.lower():
+        place_type = "Private Room"
+    elif 'shared' in sub.lower():
+        place_type = "Shared"
+    else:
+        place_type = "Entire Room"
+    
+    # bedrooms
+    
+    bedroom_list_items = soup.find_all("li", class_="l7n4lsf dir dir-ltr")
+
+
+    for item in bedroom_list_items:
+        rooms = item.text.lower()
+        if 'bedroom' in rooms:
+            if 'studio' in rooms:
+                bedrooms = 1
+            else:
+                str = rooms.split('bedroom')[0]
+                str = re.sub("[^0-9]", "", str)
+                bedrooms = int(str) 
+                
+    return ((policy_number, place_type, bedrooms))
+         
 
 
 def get_detailed_listing_database(html_file):
