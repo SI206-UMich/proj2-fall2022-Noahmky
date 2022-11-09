@@ -83,7 +83,7 @@ def get_listing_information(listing_id):
     
     # policy
     
-    file = '/html_files/listing_' + listing_id + '.html'
+    file = 'html_files/listing_' + listing_id + '.html'
     with open(file, 'r', encoding = 'utf8') as fp:
         soup = bes(fp, "html.parser")
 
@@ -142,7 +142,13 @@ def get_detailed_listing_database(html_file):
         ...
     ]
     """
-    pass
+    result = []
+    listings = get_listings_from_search_results(html_file)
+    for listing in listings: 
+        listing_info = get_listing_information(listing[2])
+        result.append(listing + listing_info)
+    
+    return result
 
 
 def write_csv(data, filename):
@@ -167,7 +173,13 @@ def write_csv(data, filename):
 
     This function should not return anything.
     """
-    pass
+    sorted_data = sorted(data, key = lambda x: x[1])
+    with open(filename, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(["Listing Title", "Cost", "Listing ID", "Policy Number", "Place Type", "Number of Bedrooms"])
+        for row in sorted_data:
+            csvwriter.writerow(row)
+            
 
 
 def check_policy_numbers(data):
