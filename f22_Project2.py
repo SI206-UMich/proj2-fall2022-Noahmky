@@ -28,7 +28,7 @@ def get_listings_from_search_results(html_file):
     ]
     """
     with open(html_file) as fp:
-        soup = bes(fp, "html.parser")
+        soup = BeautifulSoup(fp, "html.parser")
 
     
     titles = []
@@ -85,7 +85,7 @@ def get_listing_information(listing_id):
     
     file = 'html_files/listing_' + listing_id + '.html'
     with open(file, 'r', encoding = 'utf8') as fp:
-        soup = bes(fp, "html.parser")
+        soup = BeautifulSoup(fp, "html.parser")
 
     policy_list_items = soup.find_all("li", class_="f19phm7j dir dir-ltr")
 
@@ -209,7 +209,7 @@ def check_policy_numbers(data):
             if re.search('20[0-9]{2}-00[0-9]{4}STR|STR-000[0-9]{4}', policy_number):
                 continue
             else:
-                result.append(policy_number)
+                result.append(row[2])
                 
     
     return result
@@ -229,7 +229,27 @@ def extra_credit(listing_id):
     gone over their 90 day limit, else return True, indicating the lister has
     never gone over their limit.
     """
-    pass
+    file = 'html_files/listing_' + str(listing_id) + '_reviews.html'
+    with open(file, 'r', encoding = 'utf8') as fp:
+        year_list = []
+        year_dict = {}
+        soup = BeautifulSoup(fp, "html.parser")
+        review_items = soup.find_all("li", class_ = "_1f1oir5")
+    
+        for item in review_items:
+            item = item.text
+            year_list.append(item.split(" ")[1])
+        for item in year_list:
+            if item not in year_dict:
+                year_dict[item] = 1
+            else:
+                year_dict[item] += 1
+        
+        sorted_dict = sorted(year_dict.items(), key = lambda x : x[1], reverse = True)
+        if sorted_dict[0][1] > 90:
+            return False
+        else:
+            return True
 
 
 class TestCases(unittest.TestCase):
@@ -315,9 +335,9 @@ class TestCases(unittest.TestCase):
         # check that the header row is correct
         self.assertEqual(csv_lines[0], ("Listing Title", "Cost", "Listing ID", "Policy Number", "Place Type", "Number of Bedrooms"))
         # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
-        self.assertEqual(csv_lines[1], ("Private room in Mission District", 82, "51027324", "Pending", "Private Room", 1))
+        self.assertEqual(csv_lines[1], ("Private room in Mission District", "82", "51027324", "Pending", "Private Room", "1"))
         # check that the last row is Apartment in Mission District,399,28668414,Pending,Entire Room,2
-        self.assertEqual(csv_lines[-1], ("Apartment in Mission District", 399, "28668414", "Pending", "Entire Room", 2))
+        self.assertEqual(csv_lines[-1], ("Apartment in Mission District", "399", "28668414", "Pending", "Entire Room", "2"))
         
 
     def test_check_policy_numbers(self):
