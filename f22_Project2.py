@@ -83,7 +83,7 @@ def get_listing_information(listing_id):
     
     # policy
     
-    file = 'html_files/listing_' + listing_id + '.html'
+    file = 'html_files/listing_' + str(listing_id) + '.html'
     with open(file, 'r', encoding = 'utf8') as fp:
         soup = BeautifulSoup(fp, "html.parser")
 
@@ -115,15 +115,17 @@ def get_listing_information(listing_id):
     bedroom_list_items = soup.find_all("li", class_="l7n4lsf dir dir-ltr")
 
 
+        
     for item in bedroom_list_items:
         rooms = item.text.lower()
-        if 'bedroom' in rooms:
-            if 'studio' in rooms:
-                bedrooms = 1
-            else:
-                str = rooms.split('bedroom')[0]
-                str = re.sub("[^0-9]", "", str)
-                bedrooms = int(str) 
+        #print(rooms)
+        if 'studio' in rooms:
+            bedrooms = 1
+        else: 
+            if 'bedroom' in rooms:
+                s = rooms.split('bedroom')[0]
+                s = re.sub("[^0-9]", "", s)
+                bedrooms = int(s) 
                 
     return ((policy_number, place_type, bedrooms))
          
@@ -254,6 +256,8 @@ def extra_credit(listing_id):
 
 class TestCases(unittest.TestCase):
 
+    class TestCases(unittest.TestCase):
+
     def test_get_listings_from_search_results(self):
         # call get_listings_from_search_results("html_files/mission_district_search_results.html")
         # and save to a local variable
@@ -354,7 +358,6 @@ class TestCases(unittest.TestCase):
         self.assertEqual(type(detailed_database[0]), str)
         # check that the first element in the list is '16204265'
         self.assertEqual(detailed_database[0], '16204265')
-    
     
 
 if __name__ == '__main__':
